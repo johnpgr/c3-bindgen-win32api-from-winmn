@@ -15,11 +15,11 @@ if (options.RunSelfTests)
 if (options.ShowHelp)
 {
     Console.Error.WriteLine("""
-        usage: WinmnDump --winmd <Windows.Win32.winmd> [--subset data/window-subset.json] [--out out/win32.c3i] [--dump-json raw.json] [--db out/bindgen-runs.sqlite]
-               WinmnDump --self-test
+        usage: c3-bindgen-win32api-from-winmn --winmd <Windows.Win32.winmd> [--subset data/window-subset.json] [--out out/win32.c3i] [--dump-json raw.json] [--db out/bindgen-runs.sqlite]
+               c3-bindgen-win32api-from-winmn --self-test
 
         Legacy usage is also supported:
-          WinmnDump <Windows.Win32.winmd> [namespace-prefix]
+          c3-bindgen-win32api-from-winmn <Windows.Win32.winmd> [namespace-prefix]
         """);
     return options.HasError ? 1 : 0;
 }
