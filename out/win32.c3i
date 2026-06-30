@@ -1,0 +1,162 @@
+module win32 @link("kernel32", "user32");
+
+// Generated from Windows.Win32.winmd. Original Win32 names are preserved with @cname/comments.
+
+// Win32 original: BOOL
+alias Bool = int;
+
+// Win32 original: HINSTANCE
+alias HInstance = void*;
+
+// Win32 original: HMODULE
+alias HModule = void*;
+
+// Win32 original: HWND
+alias HWnd = void*;
+
+// Win32 original: LPARAM
+alias LParam = iptr;
+
+// Win32 original: LRESULT
+alias LResult = iptr;
+
+// Win32 original: POINT
+struct Point
+{
+    int x;
+    int y;
+}
+
+// Win32 original: PWSTR
+alias Pwstr = ushort*;
+
+// Win32 original: WPARAM
+alias WParam = uptr;
+
+// Win32 original: HBRUSH
+alias HBrush = void*;
+
+// Win32 original: HCURSOR
+alias HCursor = void*;
+
+// Win32 original: HICON
+alias HIcon = void*;
+
+// Win32 original: HMENU
+alias HMenu = void*;
+
+// Win32 original: MSG
+struct Msg
+{
+    HWnd hwnd;
+    uint message;
+    WParam wParam;
+    LParam lParam;
+    uint time;
+    Point pt;
+}
+
+// Win32 original: SHOW_WINDOW_CMD
+alias ShowWindowCmd = int;
+
+// Win32 original: WINDOW_EX_STYLE
+alias WindowExStyle = uint;
+
+// Win32 original: WINDOW_STYLE
+alias WindowStyle = uint;
+
+// Win32 original: WNDCLASSEXW
+struct WndClassExW
+{
+    uint cbSize;
+    WndClassStyles style;
+    WndProc lpfnWndProc;
+    int cbClsExtra;
+    int cbWndExtra;
+    HInstance hInstance;
+    HIcon hIcon;
+    HCursor hCursor;
+    HBrush hbrBackground;
+    ushort* lpszMenuName;
+    ushort* lpszClassName;
+    HIcon hIconSm;
+}
+
+// Win32 original: WNDCLASS_STYLES
+alias WndClassStyles = uint;
+
+// Win32 original: WNDPROC
+alias WndProc = fn LResult(HWnd param0, uint param1, WParam param2, LParam param3);
+
+// Win32 original: CS_HREDRAW
+const WndClassStyles CS_HREDRAW = 2;
+
+// Win32 original: CS_OWNDC
+const WndClassStyles CS_OWNDC = 32;
+
+// Win32 original: CS_VREDRAW
+const WndClassStyles CS_VREDRAW = 1;
+
+// Win32 original: CW_USEDEFAULT
+const int CW_USEDEFAULT = -2147483648;
+
+// Win32 original: SW_SHOW
+const ShowWindowCmd SW_SHOW = 5;
+
+// Win32 original: WM_DESTROY
+const uint WM_DESTROY = 2;
+
+// Win32 original: WM_PAINT
+const uint WM_PAINT = 15;
+
+// Win32 original: WS_OVERLAPPEDWINDOW
+const WindowStyle WS_OVERLAPPEDWINDOW = 13565952;
+
+// Win32 original: WS_VISIBLE
+const WindowStyle WS_VISIBLE = 268435456;
+
+extern fn Bool updateWindow(HWnd hWnd)
+    @cname("UpdateWindow");
+
+extern fn HModule getModuleHandleW(ushort* lpModuleName)
+    @cname("GetModuleHandleW");
+
+<*
+ @param [in] lpParam
+*>
+extern fn HWnd createWindowExW(WindowExStyle dwExStyle, ushort* lpClassName, ushort* lpWindowName, WindowStyle dwStyle, int x, int y, int nWidth, int nHeight, HWnd hWndParent, HMenu hMenu, HInstance hInstance, void* lpParam)
+    @cname("CreateWindowExW");
+
+extern fn LResult defWindowProcW(HWnd hWnd, uint msg, WParam wParam, LParam lParam)
+    @cname("DefWindowProcW");
+
+<*
+ @param [in] lpMsg
+*>
+extern fn LResult dispatchMessageW(Msg* lpMsg)
+    @cname("DispatchMessageW");
+
+<*
+ @param [out] lpMsg
+*>
+extern fn Bool getMessageW(Msg* lpMsg, HWnd hWnd, uint wMsgFilterMin, uint wMsgFilterMax)
+    @cname("GetMessageW");
+
+extern fn void postQuitMessage(int nExitCode)
+    @cname("PostQuitMessage");
+
+<*
+ @param [in] param0
+*>
+extern fn ushort registerClassExW(WndClassExW* param0)
+    @cname("RegisterClassExW");
+
+extern fn Bool showWindow(HWnd hWnd, ShowWindowCmd nCmdShow)
+    @cname("ShowWindow");
+
+<*
+ @param [in] lpMsg
+*>
+extern fn Bool translateMessage(Msg* lpMsg)
+    @cname("TranslateMessage");
+
