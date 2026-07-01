@@ -25,6 +25,17 @@ internal static class SelfTests
         Equal("HWnd", names.TypeName("Windows.Win32.Foundation.HWND"));
         Equal("Hdc", names.TypeName("Windows.Win32.Graphics.Gdi.HDC"));
         Equal("Hglrc", names.TypeName("Windows.Win32.Graphics.OpenGL.HGLRC"));
+        Equal("HSurf", names.TypeName("HSURF"));
+        Equal("HSyntheticPointerDevice", names.TypeName("HSYNTHETICPOINTERDEVICE"));
+        Equal("HWinEventHook", names.TypeName("HWINEVENTHOOK"));
+        Equal("HWinsta", names.TypeName("HWINSTA"));
+        Equal("LogColorSpaceW", names.TypeName("LOGCOLORSPACEW"));
+        Equal("MenuItemInfoA", names.TypeName("MENUITEMINFOA"));
+        Equal("PropEnumProcExW", names.TypeName("PROPENUMPROCEXW"));
+        Equal("TtLoadEmbeddedFontStatus", names.TypeName("TTLOAD_EMBEDDED_FONT_STATUS"));
+        Equal("UpdateLayeredWindowInfo", names.TypeName("UPDATELAYEREDWINDOWINFO"));
+        Equal("WglSwap", names.TypeName("WGLSWAP"));
+        Equal("XFormObj", names.TypeName("XFORMOBJ"));
         Equal("registerClassExW", names.FunctionName("RegisterClassExW"));
         Equal("brushobj_hGetColorTransform", names.FunctionName("BRUSHOBJ_hGetColorTransform"));
         Equal("clipobj_bEnum", names.FunctionName("CLIPOBJ_bEnum"));
@@ -141,11 +152,11 @@ internal static class SelfTests
             Value = "268435456"
         };
 
-        var spec = new SubsetSpec
+        var spec = new SubsetSpec { Module = "win32" };
+        spec.Namespaces["Windows.Win32.UI.WindowsAndMessaging"] = new NamespaceSpec
         {
-            Module = "win32",
-            Functions = ["GetWindowRect", "RegisterClassA"],
-            Constants = ["WS_VISIBLE"]
+            Functions = Filter(["GetWindowRect", "RegisterClassA"]),
+            Constants = Filter(["WS_VISIBLE"])
         };
 
         var resolved = new SubsetResolver().Resolve(api, spec);
@@ -180,6 +191,18 @@ internal static class SelfTests
             Kind = ApiTypeKind.Handle,
             AliasTarget = "void*"
         };
+        api.Types["MEMORY_BASIC_INFORMATION"] = new ApiType
+        {
+            Namespace = "Windows.Win32.System.Memory",
+            OriginalName = "MEMORY_BASIC_INFORMATION",
+            Kind = ApiTypeKind.Struct
+        };
+        api.Types["Apis"] = new ApiType
+        {
+            Namespace = "Windows.Win32.System.Memory",
+            OriginalName = "Apis",
+            Kind = ApiTypeKind.Class
+        };
 
         api.Functions["SwapBuffers"] = new ApiFunction
         {
@@ -195,6 +218,29 @@ internal static class SelfTests
             OriginalName = "glClear",
             ReturnType = "void",
             ImportModule = "OPENGL32.dll"
+        };
+
+        api.Functions["VirtualAlloc"] = new ApiFunction
+        {
+            Namespace = "Windows.Win32.System.Memory",
+            OriginalName = "VirtualAlloc",
+            ReturnType = "void*",
+            ImportModule = "KERNEL32.dll"
+        };
+
+        api.Constants["MEM_COMMIT"] = new ApiConstant
+        {
+            Namespace = "Windows.Win32.System.Memory",
+            OriginalName = "MEM_COMMIT",
+            Type = "u32",
+            Value = "4096"
+        };
+        api.Constants["MEM_PRIVATE"] = new ApiConstant
+        {
+            Namespace = "Windows.Win32.System.Memory",
+            OriginalName = "MEM_PRIVATE",
+            Type = "u32",
+            Value = "131072"
         };
 
         api.Constants["WM_CLOSE"] = new ApiConstant
@@ -213,15 +259,35 @@ internal static class SelfTests
             Value = "1"
         };
 
-        var result = new SubsetResolver().Resolve(api, new SubsetSpec
+        var spec = new SubsetSpec();
+        spec.Namespaces["Windows.Win32.Graphics.Gdi"] = new NamespaceSpec
         {
-            IncludeNamespaces = ["Windows.Win32.Graphics.OpenGL"],
-            IncludeImportModules = ["GDI32.dll"],
-            IncludeConstantsMatching = ["WM_*"]
-        });
+            Functions = Filter(["SwapBuffers"])
+        };
+        spec.Namespaces["Windows.Win32.Graphics.OpenGL"] = new NamespaceSpec
+        {
+            Functions = Filter(["*"])
+        };
+        spec.Namespaces["Windows.Win32.System.Memory"] = new NamespaceSpec
+        {
+            Functions = Filter(["*"]),
+            Types = Filter(["*"]),
+            Constants = Filter(["*"], ["MEM_PRIVATE"])
+        };
+        spec.Namespaces["Windows.Win32.UI.WindowsAndMessaging"] = new NamespaceSpec
+        {
+            Constants = Filter(["WM_*"])
+        };
+
+        var result = new SubsetResolver().Resolve(api, spec);
 
         True(result.Functions.Contains("glClear"), "namespace function seed was not resolved");
-        True(result.Functions.Contains("SwapBuffers"), "import module function seed was not resolved");
+        True(result.Functions.Contains("VirtualAlloc"), "namespace memory function seed was not resolved");
+        True(result.Types.Contains("MEMORY_BASIC_INFORMATION"), "namespace type seed was not resolved");
+        True(!result.Types.Contains("Apis"), "namespace type seed included static API holder type");
+        True(result.Constants.Contains("MEM_COMMIT"), "namespace constant seed was not resolved");
+        True(!result.Constants.Contains("MEM_PRIVATE"), "namespace constant exclude did not ban generation");
+        True(result.Functions.Contains("SwapBuffers"), "namespace function include seed was not resolved");
         True(result.Constants.Contains("WM_CLOSE"), "wildcard constant seed was not resolved");
         True(!result.Constants.Contains("UNRELATED"), "wildcard constant seed included unrelated constant");
     }
@@ -233,11 +299,11 @@ internal static class SelfTests
         try
         {
             var api = CreateWindowRectApi();
-            var spec = new SubsetSpec
+            var spec = new SubsetSpec { Module = "win32" };
+            spec.Namespaces["Windows.Win32.UI.WindowsAndMessaging"] = new NamespaceSpec
             {
-                Module = "win32",
-                Functions = ["GetWindowRect"],
-                Constants = ["WS_VISIBLE"]
+                Functions = Filter(["GetWindowRect"]),
+                Constants = Filter(["WS_VISIBLE"])
             };
             var resolved = new SubsetResolver().Resolve(api, spec);
             var names = new C3NameProjector();
@@ -372,5 +438,16 @@ internal static class SelfTests
         using var command = connection.CreateCommand();
         command.CommandText = sql;
         return Convert.ToInt32(command.ExecuteScalar());
+    }
+
+    private static IdentifierFilter Filter(string[] include, string[]? exclude = null)
+    {
+        var filter = new IdentifierFilter();
+        filter.Include.AddRange(include);
+
+        if (exclude is not null)
+            filter.Exclude.AddRange(exclude);
+
+        return filter;
     }
 }

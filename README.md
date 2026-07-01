@@ -79,61 +79,57 @@ Dumping all of the Windows API produces a massive file. Instead, `c3-bindgen-win
 ### Example JSON Subset (`data/win32.json`):
 ```json
 {
-  "module": "win32",
-  "namespaces": [
-    "Windows.Win32.Foundation",
-    "Windows.Win32.System.LibraryLoader",
-    "Windows.Win32.UI.WindowsAndMessaging",
-    "Windows.Win32.Graphics.Gdi"
-  ],
-  "includeNamespaces": [
-    "Windows.Win32.Foundation",
-    "Windows.Win32.System.LibraryLoader",
-    "Windows.Win32.UI.WindowsAndMessaging",
-    "Windows.Win32.Graphics.Gdi",
-    "Windows.Win32.Graphics.OpenGL"
-  ],
-  "includeImportModules": [
-    "USER32.dll",
-    "GDI32.dll",
-    "OPENGL32.dll"
-  ],
-  "includeConstantsMatching": [
-    "WM_*",
-    "WS_*"
-  ],
-  "functions": [
-    "GetModuleHandleW",
-    "RegisterClassExW",
-    "CreateWindowExW",
-    "DefWindowProcW",
-    "ShowWindow",
-    "UpdateWindow",
-    "GetMessageW",
-    "TranslateMessage",
-    "DispatchMessageW",
-    "PostQuitMessage"
-  ],
-  "types": [
-    "WNDCLASSEXW",
-    "MSG"
-  ],
-  "typeNameOverrides": {
-    "HWND": "HWnd",
-    "HDC": "Hdc",
-    "WNDCLASSEXW": "WndClassExW",
-    "MSG": "Msg"
+  "Windows.Win32.System.Memory": {
+    "functions": {
+      "include": [
+        "*"
+      ]
+    },
+    "types": {
+      "include": [
+        "*"
+      ]
+    },
+    "constants": {
+      "include": [
+        "*"
+      ],
+      "exclude": [
+        "MEM_REPLACE_*"
+      ]
+    }
+  },
+  "Windows.Win32.UI.WindowsAndMessaging": {
+    "functions": {
+      "include": [
+        "CreateWindowExW",
+        "DefWindowProcW",
+        "RegisterClassExW"
+      ]
+    },
+    "types": {
+      "include": [
+        "MSG",
+        "WNDCLASSEXW"
+      ]
+    },
+    "constants": {
+      "include": [
+        "WM_*",
+        "WS_*"
+      ]
+    }
   }
 }
 ```
 
 ### Key Configuration Fields:
-1. **`module`**: The name of the C3 module header emitted at the top of the generated file (e.g. `module win32;`).
-2. **`namespaces` / `includeNamespaces`**: The Win32 namespaces scanned in the metadata.
-3. **`includeImportModules`**: DLL modules whose exported functions are allowed.
-4. **`includeConstantsMatching`**: Glob patterns (e.g., `WM_*`) to automatically include matching constants.
-5. **`functions` / `types` / `constants`**: Explicit lists of APIs to include. 
-6. **`typeNameOverrides`**: Custom dictionary to define the C3-compliant PascalCase name for Win32 types (highly recommended to override default title-casing).
+1. Top-level keys are Win32 namespace names, such as `Windows.Win32.System.Memory`.
+2. Each namespace can configure `functions`, `types`, and `constants`.
+3. Each kind supports `include` and `exclude` glob filters. `include: ["*"]` allows all identifiers of that kind in the namespace; `exclude` wins and bans matching identifiers from generation.
+4. If a kind is omitted, it is not seeded directly from that namespace. Dependencies of included functions/types are still resolved automatically.
+5. A namespace can still define `typeNameOverrides` for one-off C3 type names, but common Win32 screaming-case names are projected automatically.
+6. The emitted C3 module name defaults to `win32`.
 
 ### Dependency Resolution
 You only need to list the main functions or structs you use. The generator's `DependencyResolver` automatically traverses parameters, struct fields, and return types, pulling in transitive dependencies recursively (e.g. including `RegisterClassExW` will automatically resolve and pull in `WndClassExW`, `WndProc`, `HINSTANCE`, etc.).

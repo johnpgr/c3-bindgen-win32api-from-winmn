@@ -82,6 +82,224 @@ public sealed class C3NameProjector
         ["WPARAM"] = "WParam"
     };
 
+    private static readonly Dictionary<string, string> TypeNameWords = new(StringComparer.Ordinal)
+    {
+        ["ABC"] = "Abc",
+        ["ABORT"] = "Abort",
+        ["ACCEL"] = "Accel",
+        ["ADJUSTMENT"] = "Adjustment",
+        ["ALLOC"] = "Alloc",
+        ["ALTTAB"] = "AltTab",
+        ["ASYNC"] = "Async",
+        ["ATTR"] = "Attr",
+        ["BACKGROUND"] = "Background",
+        ["BAR"] = "Bar",
+        ["BITMAP"] = "Bitmap",
+        ["BITS"] = "Bits",
+        ["BLEND"] = "Blend",
+        ["BOX"] = "Box",
+        ["BRUSH"] = "Brush",
+        ["BSM"] = "Bsm",
+        ["BUTTON"] = "Button",
+        ["CALLBACK"] = "Callback",
+        ["CFP"] = "Cfp",
+        ["CHANGE"] = "Change",
+        ["CHARSET"] = "Charset",
+        ["CIE"] = "Cie",
+        ["CLIP"] = "Clip",
+        ["COLORSPACE"] = "ColorSpace",
+        ["COLOR"] = "Color",
+        ["COMBOBOX"] = "ComboBox",
+        ["CONFIG"] = "Config",
+        ["CONSOLE"] = "Console",
+        ["CONSTANTS"] = "Constants",
+        ["CONTEXT"] = "Context",
+        ["CONTROL"] = "Control",
+        ["CONV"] = "Conv",
+        ["CONVERSATION"] = "Conversation",
+        ["CS"] = "Cs",
+        ["CURSOR"] = "Cursor",
+        ["DATA"] = "Data",
+        ["DATE"] = "Date",
+        ["DDE"] = "Dde",
+        ["DESCRIPTOR"] = "Descriptor",
+        ["DESIGN"] = "Design",
+        ["DESK"] = "Desk",
+        ["DESKTOP"] = "Desktop",
+        ["DEVICE"] = "Device",
+        ["DEV"] = "Dev",
+        ["DH"] = "Dh",
+        ["DISPLAY"] = "Display",
+        ["DLG"] = "Dlg",
+        ["DDA"] = "Dda",
+        ["DOC"] = "Doc",
+        ["DRAW"] = "Draw",
+        ["DWP"] = "Dwp",
+        ["DV"] = "Dv",
+        ["EMBEDDED"] = "Embedded",
+        ["EMBED"] = "Embed",
+        ["EMF"] = "Emf",
+        ["ENH"] = "Enh",
+        ["ENTRY"] = "Entry",
+        ["ENUM"] = "Enum",
+        ["EVENT"] = "Event",
+        ["EX"] = "Ex",
+        ["FAR"] = "Far",
+        ["FD"] = "Fd",
+        ["FILE"] = "File",
+        ["FILTER"] = "Filter",
+        ["FLAGS"] = "Flags",
+        ["FLASH"] = "Flash",
+        ["FLOAT"] = "Float",
+        ["FONT"] = "Font",
+        ["FORMAT"] = "Format",
+        ["FREE"] = "Free",
+        ["FUNCTION"] = "Function",
+        ["FX"] = "Fx",
+        ["GCP"] = "Gcp",
+        ["GDI"] = "Gdi",
+        ["GESTURE"] = "Gesture",
+        ["GLYPH"] = "Glyph",
+        ["GLOBAL"] = "Global",
+        ["GOBJ"] = "GObj",
+        ["GRAY"] = "Gray",
+        ["GUI"] = "Gui",
+        ["H"] = "H",
+        ["HANDLE"] = "Handle",
+        ["HEADER"] = "Header",
+        ["HELP"] = "Help",
+        ["HOOK"] = "Hook",
+        ["ICM"] = "Icm",
+        ["ICON"] = "Icon",
+        ["ID"] = "Id",
+        ["IFI"] = "Ifi",
+        ["IME"] = "Ime",
+        ["INFO"] = "Info",
+        ["INPUT"] = "Input",
+        ["ITEM"] = "Item",
+        ["KERNING"] = "Kerning",
+        ["L"] = "L",
+        ["LANG"] = "Lang",
+        ["LAST"] = "Last",
+        ["LAYERED"] = "Layered",
+        ["LAYER"] = "Layer",
+        ["LCS"] = "Lcs",
+        ["LINE"] = "Line",
+        ["LIST"] = "List",
+        ["LOAD"] = "Load",
+        ["LOCAL"] = "Local",
+        ["LOG"] = "Log",
+        ["MASK"] = "Mask",
+        ["MENU"] = "Menu",
+        ["META"] = "Meta",
+        ["METAFILE"] = "Metafile",
+        ["METRIC"] = "Metric",
+        ["METRICS"] = "Metrics",
+        ["MF"] = "Mf",
+        ["MODE"] = "Mode",
+        ["MONITOR"] = "Monitor",
+        ["MOUSE"] = "Mouse",
+        ["MOVE"] = "Move",
+        ["MSG"] = "Msg",
+        ["NAME"] = "Name",
+        ["NOTIFY"] = "Notify",
+        ["OBJ"] = "Obj",
+        ["ORDERING"] = "Ordering",
+        ["OUTLINE"] = "Outline",
+        ["OUTPUT"] = "Output",
+        ["PAIR"] = "Pair",
+        ["PAINT"] = "Paint",
+        ["PALETTE"] = "Palette",
+        ["PARAMS"] = "Params",
+        ["PATH"] = "Path",
+        ["PDEV"] = "PDev",
+        ["PEN"] = "Pen",
+        ["PFN"] = "Pfn",
+        ["PICT"] = "Pict",
+        ["PIXEL"] = "Pixel",
+        ["PLANE"] = "Plane",
+        ["POINT"] = "Point",
+        ["POINTER"] = "Pointer",
+        ["POLY"] = "Poly",
+        ["POWER"] = "Power",
+        ["PROC"] = "Proc",
+        ["PRO"] = "Pro",
+        ["PROP"] = "Prop",
+        ["P"] = "P",
+        ["QF"] = "Qf",
+        ["QUAD"] = "Quad",
+        ["RANGE"] = "Range",
+        ["RATIONAL"] = "Rational",
+        ["RAW"] = "Raw",
+        ["READ"] = "Read",
+        ["REALLOC"] = "Realloc",
+        ["RECORD"] = "Record",
+        ["RECT"] = "Rect",
+        ["RESULTS"] = "Results",
+        ["RGN"] = "Rgn",
+        ["RGB"] = "Rgb",
+        ["ROTATION"] = "Rotation",
+        ["RSRC"] = "Rsrc",
+        ["RUN"] = "Run",
+        ["SCALING"] = "Scaling",
+        ["SCANLINE"] = "Scanline",
+        ["SCROLL"] = "Scroll",
+        ["SECURITY"] = "Security",
+        ["SEMAPHORE"] = "Semaphore",
+        ["SEND"] = "Send",
+        ["SET"] = "Set",
+        ["SIGNATURE"] = "Signature",
+        ["SOURCE"] = "Source",
+        ["STATUS"] = "Status",
+        ["STATES"] = "States",
+        ["STATE"] = "State",
+        ["STRING"] = "String",
+        ["STRUCT"] = "Struct",
+        ["STR"] = "Str",
+        ["STYPE"] = "Type",
+        ["SURF"] = "Surf",
+        ["SWAP"] = "Swap",
+        ["SYNTHETIC"] = "Synthetic",
+        ["TABLE"] = "Table",
+        ["TARGET"] = "Target",
+        ["TECHNOLOGY"] = "Technology",
+        ["TESTS"] = "Tests",
+        ["TEXT"] = "Text",
+        ["THREAD"] = "Thread",
+        ["TIME"] = "Time",
+        ["TIMER"] = "Timer",
+        ["TITLE"] = "Title",
+        ["TOPOLOGY"] = "Topology",
+        ["TOUCH"] = "Touch",
+        ["TPM"] = "Tpm",
+        ["TRACK"] = "Track",
+        ["TRIPLE"] = "Triple",
+        ["TRI"] = "Tri",
+        ["TT"] = "Tt",
+        ["TYPE"] = "Type",
+        ["UPDATE"] = "Update",
+        ["VALIDATION"] = "Validation",
+        ["VECTOR"] = "Vector",
+        ["VERTEX"] = "Vertex",
+        ["VIDEO"] = "Video",
+        ["WC"] = "Wc",
+        ["WGL"] = "Wgl",
+        ["WIN"] = "Win",
+        ["WINDOW"] = "Window",
+        ["WINEVENT"] = "WinEvent",
+        ["WINSTA"] = "Winsta",
+        ["WND"] = "Wnd",
+        ["WRITE"] = "Write",
+        ["W"] = "W",
+        ["XFORM"] = "XForm",
+        ["XLATE"] = "Xlate",
+        ["XYZ"] = "Xyz"
+    };
+
+    private static readonly string[] TypeNameWordKeys = TypeNameWords.Keys
+        .OrderByDescending(key => key.Length)
+        .ToArray();
+
     private readonly Dictionary<string, string> _originalToC3Type = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> _c3TypeToOriginal = new(StringComparer.Ordinal);
 
@@ -160,7 +378,7 @@ public sealed class C3NameProjector
     {
         var parts = original
             .Split(['_', '-', ' '], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Select(ToPascalPart);
+            .Select(ProjectTypeNamePart);
 
         var name = string.Concat(parts);
         if (string.IsNullOrEmpty(name))
@@ -173,6 +391,65 @@ public sealed class C3NameProjector
             name += "Type";
 
         return name;
+    }
+
+    private static string ProjectTypeNamePart(string value)
+    {
+        if (value.Length == 0)
+            return value;
+
+        if (!value.All(char.IsAsciiLetterOrDigit))
+            return ToPascalPart(value);
+
+        if (value.All(ch => char.IsAsciiLetterUpper(ch) || char.IsAsciiDigit(ch)) &&
+            TrySplitUppercaseTypeName(value, out var projected))
+        {
+            return projected;
+        }
+
+        return ToPascalPart(value);
+    }
+
+    private static bool TrySplitUppercaseTypeName(string value, out string projected)
+    {
+        if (TypeNameWords.TryGetValue(value, out projected!))
+            return true;
+
+        if (value.Length > 1 && value[^1] is 'A' or 'W')
+        {
+            if (TrySplitUppercaseTypeName(value[..^1], out var baseName))
+            {
+                projected = baseName + value[^1];
+                return true;
+            }
+        }
+
+        var sb = new StringBuilder();
+        var index = 0;
+
+        while (index < value.Length)
+        {
+            var matched = false;
+            foreach (var key in TypeNameWordKeys)
+            {
+                if (!value[index..].StartsWith(key, StringComparison.Ordinal))
+                    continue;
+
+                sb.Append(TypeNameWords[key]);
+                index += key.Length;
+                matched = true;
+                break;
+            }
+
+            if (!matched)
+            {
+                projected = "";
+                return false;
+            }
+        }
+
+        projected = sb.ToString();
+        return projected.Length > 0;
     }
 
     private static string SanitizeTypeName(string value)

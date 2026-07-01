@@ -48,8 +48,7 @@ if (options.LegacyMode && options.SubsetPath is null && options.OutPath is null)
 var subsetPath = options.SubsetPath ?? Path.Combine("data", "window-subset.json");
 var outPath = options.OutPath ?? Path.Combine("out", "win32.c3i");
 var subsetJson = File.ReadAllText(subsetPath);
-var spec = JsonSerializer.Deserialize<SubsetSpec>(subsetJson, JsonOptions.CamelCase) ??
-    throw new InvalidOperationException($"failed to parse subset spec: {subsetPath}");
+var spec = SubsetSpec.Load(subsetPath);
 var resolved = new SubsetResolver().Resolve(api, spec);
 
 var names = new C3NameProjector(spec.TypeNameOverrides);

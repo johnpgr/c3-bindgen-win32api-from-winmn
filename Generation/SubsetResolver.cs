@@ -6,15 +6,13 @@ public sealed class SubsetResolver
 {
     public SubsetResult Resolve(ApiDatabase api, SubsetSpec spec)
     {
-        var neededTypes = new HashSet<string>(spec.Types, StringComparer.Ordinal);
-        var neededFunctions = new HashSet<string>(spec.Functions, StringComparer.Ordinal);
-        var neededConstants = new HashSet<string>(spec.Constants, StringComparer.Ordinal);
+        var neededTypes = new HashSet<string>(StringComparer.Ordinal);
+        var neededFunctions = new HashSet<string>(StringComparer.Ordinal);
+        var neededConstants = new HashSet<string>(StringComparer.Ordinal);
         var warnings = new List<string>();
         var queue = new Queue<(string Kind, string Name)>();
 
         SeedFromNamespaces(api, spec, neededTypes, neededFunctions, neededConstants);
-        SeedFromImportModules(api, spec, neededFunctions);
-        SeedConstantsFromPatterns(api, spec, neededConstants);
 
         foreach (var fn in neededFunctions)
             queue.Enqueue(("function", fn));
@@ -72,6 +70,8 @@ public sealed class SubsetResolver
             }
         }
 
+        ApplyExcludes(api, spec, neededTypes, neededFunctions, neededConstants);
+
         return new SubsetResult(
             SortByNamespaceThenName(api.Types, neededTypes),
             SortByNamespaceThenName(api.Functions, neededFunctions),
@@ -99,98 +99,79 @@ public sealed class SubsetResolver
         HashSet<string> neededFunctions,
         HashSet<string> neededConstants)
     {
-        if (spec.IncludeNamespaces.Count == 0)
+        if (spec.Namespaces.Count == 0)
             return;
 
         foreach (var (name, function) in api.Functions)
         {
-            if (MatchesAnyNamespace(function.Namespace, spec.IncludeNamespaces))
+            if (Allows(spec, function.Namespace, IdentifierKind.Function, name))
                 neededFunctions.Add(name);
         }
-    }
 
-    private static void SeedFromImportModules(
-        ApiDatabase api,
-        SubsetSpec spec,
-        HashSet<string> neededFunctions)
-    {
-        if (spec.IncludeImportModules.Count == 0)
-            return;
-
-        var modules = spec.IncludeImportModules
-            .Select(NormalizeModuleName)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var (name, function) in api.Functions)
+        foreach (var (name, type) in api.Types)
         {
-            if (function.ImportModule is not null && modules.Contains(NormalizeModuleName(function.ImportModule)))
-                neededFunctions.Add(name);
+            if (type.Kind != ApiTypeKind.Class && Allows(spec, type.Namespace, IdentifierKind.Type, name))
+                neededTypes.Add(name);
+        }
+
+        foreach (var (name, constant) in api.Constants)
+        {
+            if (Allows(spec, constant.Namespace, IdentifierKind.Constant, name))
+                neededConstants.Add(name);
         }
     }
 
-    private static void SeedConstantsFromPatterns(
+    private static void ApplyExcludes(
         ApiDatabase api,
         SubsetSpec spec,
+        HashSet<string> neededTypes,
+        HashSet<string> neededFunctions,
         HashSet<string> neededConstants)
     {
-        if (spec.IncludeConstantsMatching.Count == 0)
-            return;
+        neededTypes.RemoveWhere(name =>
+            api.Types.TryGetValue(name, out var type) &&
+            Excludes(spec, type.Namespace, IdentifierKind.Type, name));
+        neededFunctions.RemoveWhere(name =>
+            api.Functions.TryGetValue(name, out var function) &&
+            Excludes(spec, function.Namespace, IdentifierKind.Function, name));
+        neededConstants.RemoveWhere(name =>
+            api.Constants.TryGetValue(name, out var constant) &&
+            Excludes(spec, constant.Namespace, IdentifierKind.Constant, name));
+    }
 
-        foreach (var constantName in api.Constants.Keys)
+    private static bool Allows(SubsetSpec spec, string ns, IdentifierKind kind, string name)
+    {
+        return MatchingNamespaceSpecs(spec, ns)
+            .Any(namespaceSpec => FilterFor(namespaceSpec, kind).Allows(name));
+    }
+
+    private static bool Excludes(SubsetSpec spec, string ns, IdentifierKind kind, string name)
+    {
+        return MatchingNamespaceSpecs(spec, ns)
+            .Any(namespaceSpec => FilterFor(namespaceSpec, kind).Excludes(name));
+    }
+
+    private static IEnumerable<NamespaceSpec> MatchingNamespaceSpecs(SubsetSpec spec, string ns)
+    {
+        foreach (var (namespaceName, namespaceSpec) in spec.Namespaces)
         {
-            if (spec.IncludeConstantsMatching.Any(pattern => WildcardMatch(constantName, pattern)))
-                neededConstants.Add(constantName);
+            if (ns.Equals(namespaceName, StringComparison.Ordinal) ||
+                ns.StartsWith(namespaceName + ".", StringComparison.Ordinal))
+            {
+                yield return namespaceSpec;
+            }
         }
     }
 
-    private static bool MatchesAnyNamespace(string ns, List<string> namespaceSpecs)
+    private static IdentifierFilter FilterFor(NamespaceSpec namespaceSpec, IdentifierKind kind)
     {
-        return namespaceSpecs.Any(spec =>
-            ns.Equals(spec, StringComparison.Ordinal) ||
-            ns.StartsWith(spec + ".", StringComparison.Ordinal));
-    }
-
-    private static string NormalizeModuleName(string module)
-    {
-        return Path.GetFileNameWithoutExtension(module.Trim());
-    }
-
-    private static bool WildcardMatch(string value, string pattern)
-    {
-        var valueIndex = 0;
-        var patternIndex = 0;
-        var starIndex = -1;
-        var matchIndex = 0;
-
-        while (valueIndex < value.Length)
+        return kind switch
         {
-            if (patternIndex < pattern.Length &&
-                (pattern[patternIndex] == '?' ||
-                 char.ToUpperInvariant(pattern[patternIndex]) == char.ToUpperInvariant(value[valueIndex])))
-            {
-                valueIndex++;
-                patternIndex++;
-            }
-            else if (patternIndex < pattern.Length && pattern[patternIndex] == '*')
-            {
-                starIndex = patternIndex++;
-                matchIndex = valueIndex;
-            }
-            else if (starIndex != -1)
-            {
-                patternIndex = starIndex + 1;
-                valueIndex = ++matchIndex;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        while (patternIndex < pattern.Length && pattern[patternIndex] == '*')
-            patternIndex++;
-
-        return patternIndex == pattern.Length;
+            IdentifierKind.Function => namespaceSpec.Functions,
+            IdentifierKind.Type => namespaceSpec.Types,
+            IdentifierKind.Constant => namespaceSpec.Constants,
+            _ => IdentifierFilter.Empty
+        };
     }
 
     private static List<string> SortByNamespaceThenName<T>(Dictionary<string, T> source, HashSet<string> names)
@@ -210,5 +191,12 @@ public sealed class SubsetResolver
             ApiConstant constant => constant.Namespace,
             _ => ""
         };
+    }
+
+    private enum IdentifierKind
+    {
+        Function,
+        Type,
+        Constant
     }
 }
